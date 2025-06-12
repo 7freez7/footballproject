@@ -1,0 +1,76 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Team {
+  id                Int       @id @default(autoincrement())
+  name              String
+  logo              String
+  date_of_last_update DateTime
+  created_at        DateTime @default(now())
+  players           Player[]
+  homeMatches       Match[]  @relation("HomeTeam")
+  awayMatches       Match[]  @relation("AwayTeam")
+}
+
+model Player {
+  id          Int       @id @default(autoincrement())
+  first_name  String
+  last_name   String
+  date_of_birth DateTime
+  position    String
+  jersey_num  Int
+  team        Team?     @relation(fields: [team_id], references: [id])
+  team_id     Int?
+  goals       Goal[]
+  matches     PlayerMatch[]
+}
+
+model Match {
+  id          Int       @id @default(autoincrement())
+  date        DateTime
+  stadium     String
+  home_team   Team      @relation("HomeTeam", fields: [home_team_id], references: [id])
+  away_team   Team      @relation("AwayTeam", fields: [away_team_id], references: [id])
+  home_team_id Int
+  away_team_id Int
+  home_score  Int
+  away_score  Int
+  goals       Goal[]
+  players     PlayerMatch[]
+}
+
+model Goal {
+  id          Int       @id @default(autoincrement())
+  match       Match     @relation(fields: [match_id], references: [id])
+  match_id    Int
+  player      Player    @relation(fields: [player_id], references: [id])
+  player_id   Int
+  minute      Int
+  is_own_goal Boolean
+  is_penalty  Boolean
+}
+
+model PlayerMatch {
+  player       Player   @relation(fields: [player_id], references: [id])
+  match        Match    @relation(fields: [match_id], references: [id])
+  player_id    Int
+  match_id     Int
+  minutes_played Int
+  yellow_cards Int
+  red_cards    Int
+
+  @@id([player_id, match_id])
+}
+
